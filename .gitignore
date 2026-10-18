@@ -1,0 +1,6 @@
+.idea/
+.venv/
+__pycache__/
+skin-cancer-mnist-ham10000/
+*.pt
+*.pth
