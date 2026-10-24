@@ -1,15 +1,20 @@
+#imports
+
 import pandas as pd
 import pathlib
 from sklearn.model_selection import StratifiedGroupKFold
 
-
+#just to make opening folders easier
 root = pathlib.Path("skin-cancer-mnist-ham10000/versions/2")
 
+#opening the dataset and storing it in the dataset df using pandas
 df = pd.read_csv(root /  "HAM10000_metadata.csv")
 
+#getting the names of each class and associating it with a number using a dict
 classes = sorted(df["dx"].unique())
 label_of = {c: i for i, c in enumerate(classes)}
 
+#mapping each image's name to the number established in label_of
 df['label'] = df['dx'].map(label_of)
 
 
@@ -35,7 +40,15 @@ train_idx, val_idx = folds[0]
 
 train, val = train_val.iloc[train_idx], train_val.iloc[val_idx]
 
+print(len(train))
+print(train['dx'].value_counts())
 
+print(len(test))
+print(test['dx'].value_counts())
 
+print(len(val))
+print(val['dx'].value_counts())
 
-
+#length of train split is 6676
+#length of test split is 2004
+#length of validation split is 1335
