@@ -43,12 +43,16 @@ train, val = train_val.iloc[train_idx], train_val.iloc[val_idx]
 print(len(train))
 print(train['dx'].value_counts())
 
-print(len(test))
-print(test['dx'].value_counts())
-
-print(len(val))
-print(val['dx'].value_counts())
 
 #length of train split is 6676
 #length of test split is 2004
 #length of validation split is 1335
+
+#class weights for training:
+weights = dict()
+
+for cls in train['label']:
+    weight = 6676/(7*(train['label'] == cls).sum())
+    weights[cls] = weight
+
+print(weights)
