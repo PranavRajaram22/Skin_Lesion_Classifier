@@ -66,4 +66,46 @@ for cls in train['label']:
     weight = len(train)/(len(classes)*(train['label'] == cls).sum())
     weights[cls] = weight
 
-print(weights)
+
+#defining a function to get the actual pixels of an image from the path. Now images can be directly referenced with their labels
+def path_to_image(path, label):
+    raw_bytes = tf.io.read_file(path)
+    img = tf.io.decode_jpeg(raw_bytes, channels=3)
+    img = tf.image.resize(img, (240,240))
+
+    return (img, label)
+
+
+#building the training dataset. shuffling (path, label) pairs, then applying the path_to_image function,
+#then batching, then prefetching to minimize GPU and CPU waste.
+#shuffling because right now classes are ordered. all the 1 class, then all of another, etc.
+train_paths_list = train['path'].astype(str).tolist()
+train_labels_list = train['label'].tolist()
+train_ds = (tf.data.Dataset.from_tensor_slices((train_paths_list, train_labels_list))
+            .shuffle(len(train_paths_list), seed=42)
+            .map(path_to_image, num_parallel_calls=tf.data.AUTOTUNE)
+            .batch(32)
+            .prefetch(tf.data.AUTOTUNE))
+
+#repeating the aboves for val and test. no need to shuffle anything though
+val_paths_list = val['path'].astype(str).tolist()
+val_labels_list = val['label'].tolist()
+val_ds = (tf.data.Dataset.from_tensor_slices((val_paths_list, val_labels_list))
+            .map(path_to_image, num_parallel_calls=tf.data.AUTOTUNE)
+            .batch(32)
+            .prefetch(tf.data.AUTOTUNE))
+
+
+test_paths_list = test['path'].astype(str).tolist()
+test_labels_list = test['label'].tolist()
+test_ds = (tf.data.Dataset.from_tensor_slices((test_paths_list, test_labels_list))
+            .map(path_to_image, num_parallel_calls=tf.data.AUTOTUNE)
+            .batch(32)
+            .prefetch(tf.data.AUTOTUNE))
+
+
+for x, y in train_ds.take(1):
+    print(x.shape, y.shape)
+
+
+
