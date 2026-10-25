@@ -4,6 +4,7 @@ import pandas as pd
 import pathlib
 from sklearn.model_selection import StratifiedGroupKFold
 import tensorflow as tf
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 #just to make opening folders easier
 root = pathlib.Path("skin-cancer-mnist-ham10000/versions/2")
@@ -138,5 +139,12 @@ model = tf.keras.Model(inputs, outputs)
 model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 model.summary()
 
+#train upto 15 epochs, stopping if val_loss doesnt improve after 3 epochs
+history = model.fit(train_ds,
+          validation_data=val_ds,
+          epochs=15,
+          class_weight=weights,
+          callbacks=[EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True),
+          ModelCheckpoint("best.keras", monitor='val_loss', save_best_only=True)])
 
 
