@@ -2,6 +2,7 @@
 from data import train_ds, val_ds, weights
 import tensorflow as tf
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras import layers
 
 
 #time to actually build the model!
@@ -13,8 +14,19 @@ model_base = tf.keras.applications.EfficientNetV2B1(include_top=False, weights="
 model_base.trainable = False
 
 #building the input layers
-inputs = tf.keras.Input(shape=(240, 240,3))
-x = model_base(inputs, training=False) #basically says that the output will have shape (None, 8,8, 1280).
+
+
+#now start data augmentation
+
+aug = tf.keras.Sequential([
+    layers.RandomFlip('horizontal_and_vertical'),
+    layers.RandomRotation(0.1),
+    layers.RandomZoom(0.1),
+])
+
+inputs = tf.keras.Input(shape=(240, 240, 3))
+x = aug(inputs)
+x = model_base(x, training=False) #basically says that the output will have shape (None, 8,8, 1280).
 x = tf.keras.layers.GlobalAveragePooling2D()(x) #creates the pooling average (averages each 8x8 values into 1 number), feeds x in, then passes it to x. shape is now (None, 1280)
 x = tf.keras.layers.Dropout(0.2)(x) #to reduce overfitting. forces 20% of the 1280 values to 0, and scale the rest up accordingly. only during training. dont want the model to rely solely one 1 feature for classification
 
@@ -33,11 +45,13 @@ model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='sparse_categorical
 model.summary()
 
 #train upto 15 epochs, stopping if val_loss doesnt improve after 3 epochs
+
 history = model.fit(train_ds,
           validation_data=val_ds,
           epochs=15,
           class_weight=weights,
           callbacks=[EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True),
-          ModelCheckpoint("best.keras", monitor='val_loss', save_best_only=True)])
+          ModelCheckpoint("best_aug.keras", monitor='val_loss', save_best_only=True)])
+
 
 
