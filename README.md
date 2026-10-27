@@ -1,23 +1,34 @@
-Here is my classification report and confusion matrix for after base training. No fine tuning yet. 
+7-Class skin lesion classifier on the HAM10000 dataset, with transfer-learning from EfficientNetV2-B1.
 
-                 precision  recall   f1-score    support
+Note: This model was created solely as a research project for my portfolio. Please do not use this as a clinical or diagnostic tool under any circumstances. 
 
-       akiec       0.25      0.57      0.35        44
-         bcc       0.43      0.52      0.47        69
-         bkl       0.57      0.55      0.56       146
-          df       0.20      0.73      0.31        15
-         mel       0.39      0.60      0.47       148
-          nv       0.96      0.74      0.84       894
-        vasc       0.49      0.89      0.63        19
 
-    accuracy                           0.69      1335
-    macro avg      0.47      0.66      0.52      1335
-    weighted avg   0.79      0.69      0.72      1335
-    
-    [[ 25   7   5   4   3   0   0]
-    [ 12  36   5   5   3   3   5]
-    [ 18  13  81   5  21   7   1]
-    [  3   0   1  11   0   0   0]
-    [ 15   6  12   6  89  20   0]
-    [ 27  21  35  25 111 663  12]
-    [  0   0   2   0   0   0  17]]
+Sources:
+
+https://www.kaggle.com/datasets/kmader/skin-cancer-mnist-ham10000/data [1]
+
+https://my.clevelandclinic.org/health/diseases/24296-skin-lesions [2]
+
+https://www.codetrade.io/blog/grad-cam-a-complete-guide-with-example/ [3]
+
+https://arxiv.org/abs/1610.02391 [4]
+
+https://challenge.isic-archive.com/landing/2018/47/ [5] 
+
+**About the data and dataset**
+
+
+The dataset used was the HAM10000 dataset [1]. It consists of 10015 close-up images of skin lesions, and each skin lesion belongs to 1 of 7 classes. A skin lesion is defined as an area on the skin that is different from the skin around it. [2] Most are not cancerous and harmless (benign), but some are cancerous, or are a symptom of infections and autoimmune diseases. The 7 classes along with their acronyms are listed below. Note that acronyms will be the naming scheme for this ReadMe.
+
+
+1. Melanoma (mel) | Count in dataset: 1113
+2. Melanocytic Nevus (nv) | Count in dataset: 6705
+3. Basal Cell Carcinoma (bcc) | Count in dataset: 514
+4. Actinic Keratosis (akiec) | Count in dataset: 327
+5. Benign Keratosis (bkl) | Count in dataset: 1099
+6. Dermatofibroma (df) | Count in dataset: 115
+7. Vascular lesion (vasc) | Count in dataset: 142
+
+
+<img width="1874" height="960" alt="image" src="https://github.com/user-attachments/assets/f8cdd06d-8efb-4c77-883f-67b18c5c6f32" />
+[5]
