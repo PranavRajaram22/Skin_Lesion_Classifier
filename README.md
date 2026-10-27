@@ -37,10 +37,27 @@ The dataset used was the HAM10000 dataset [1]. It consists of 10015 close-up ima
 
 First, the images were downloaded from Kaggle directly [1] into the project folder using code in download_files.py. Then, data was processed and grouped into viable training, validation, and testing splits. This was done using SciKitLearn's StratifiedGroupKFold function. This function creates subsets of data, known as 'folds', and ensures that 1. all of the photos of 1 lesion are in the same fold and 2. that the distribution of classes in each fold roughly matches the original distribution of the classes in the dataset. This ensures that near-duplicate images never appear in both training and testing data, which would inflate accuracy. This function was used twice, along with other functions, to create 3 splits of data; training data, validation data, testing data. 
 
-Next, the model was created. The model is based off of EfficientNetV2B1 from TensorFlow, pretrained on images from ImageNet. Inputs were taken in as 240 pixels by 240 pixels, with 3 color channels. After EfficientNetV2B1, GlobalAveragePooling and DropOut by 20% were added. 
+Next, the model was created. The model is based off of EfficientNetV2B1 from TensorFlow, pretrained on images from ImageNet. Inputs were taken in as 240 pixels by 240 pixels, with 3 color channels. After EfficientNetV2B1, GlobalAveragePooling and DropOut by 20% were added. These layers were frozen for the first round of training. Next, a dense head with 7 neurons per layer. It is this head that gets trained. The other layers were frozen to stop the training from affecting both the untrained dense head and the ImageNet training done on EfficientNetV2B1. 
 
 Finally, the model was trained on the images, with an Adam optimizer at a learning rate of 10^-3, and sparse categorical crossentropy as the loss because the classes are encoded as integers. Furthermore, early stopping with a patience of 3 and model checkpoints were enabled. 
 
-After training, evaluation.py was used on the model (best.keras). Below are the classification report and the confusion matrix. 
+After training, evaluation.py was used on the model (best.keras). As implied, this model has no finetuning nor data augmentation involved. Below are the classification report and the confusion matrices (regular and normalized)
 
+
+|              |   precision |   recall |   f1-score |   support |
+|:-------------|------------:|---------:|-----------:|----------:|
+| akiec        |        0.25 |     0.57 |       0.35 |        44 |
+| bcc          |        0.43 |     0.52 |       0.47 |        69 |
+| bkl          |        0.57 |     0.55 |       0.56 |       146 |
+| df           |        0.2  |     0.73 |       0.31 |        15 |
+| mel          |        0.39 |     0.6  |       0.47 |       148 |
+| nv           |        0.96 |     0.74 |       0.84 |       894 |
+| vasc         |        0.49 |     0.89 |       0.63 |        19 |
+| accuracy     |        0.69 |     0.69 |       0.69 |         0 |
+| macro avg    |        0.47 |     0.66 |       0.52 |      1335 |
+| weighted avg |        0.79 |     0.69 |       0.72 |      1335 |
+
+<img width="802" height="680" alt="image" src="https://github.com/user-attachments/assets/3056026d-a802-4427-a039-22a4fc4aafde" />
+
+<img width="796" height="680" alt="image" src="https://github.com/user-attachments/assets/7eddbc28-6e97-4f3d-8e74-1df350a92174" />
 
