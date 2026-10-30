@@ -15,6 +15,10 @@ https://arxiv.org/abs/1610.02391 [4]
 
 https://challenge.isic-archive.com/landing/2018/47/ [5] 
 
+https://en.wikipedia.org/wiki/Precision_and_recall [6]
+
+https://www.mayoclinic.org/diseases-conditions/melanoma/symptoms-causes/syc-20374884 [7]
+
 
 **About the data and dataset**
 
@@ -61,3 +65,20 @@ After training, evaluate.py was used on the model (best.keras) using the test da
 <img width="815" height="680" alt="image" src="https://github.com/user-attachments/assets/dce8df9e-fd71-4d91-8b54-85a24eb6b454" />
 <img width="796" height="680" alt="image" src="https://github.com/user-attachments/assets/e763f00a-f208-4d62-8559-df471e6d38c1" />
 
+
+The accuracy row in the above table is not informative on its own. This is because guessing nv for every single image already gives an accuracy of 0.67 (894/1335). 
+The most relevant numbers are:
+
+- Macro avg of the F1 score (0.52): This number indicates that the model is okay on overall reliability. It is much better than random guessing (0.14), but low scores on df (0.31) and akiec (0.35) bring the model's reliability down.
+- Macro-recall (0.66): This number indicates that the model, on average, correctly identifies two thirds of images in each class.
+- Macro-precision (0.47): This indicates that the model's flags are correct less than half the time. This shows that the model is over-confident.
+- mel recall (0.60): This indicates that the model misses 4 out of every 10 images of mel. Not save for diagnosis, as melanoma is deadly. [7]
+- mel precision (0.39): This indicates that the model incorrectly identifies an image as mel 6 out of 10 times. Most of these may have come from identifying nv as mel, as the 2 look similar. This similarity will be explored using GradCAM later.
+- vasc recall (0.89): This indicates that the model correctly identifies images as vasc almost 9 out of 10 times, even with such few images for training (19). This may be because vasc looks very distinct compared to the other lesions 
+
+
+Overall, the model, with basic training, is able to correctly identify classes when there are many images of those classes (e.g. nv), but drops significantly in accuracy when the number of images for a particular class is low (e.g. df). 
+
+**Data augmentation, fine-tuning, and final model selection**
+
+Based on the classification report and confusion matrices, the model could use some improvement. 
