@@ -39,46 +39,65 @@ The dataset used was the HAM10000 dataset [1]. It consists of 10015 close-up ima
 
 **The Method**
 
-First, the images were downloaded from Kaggle directly [1] into the project folder using code in download_files.py. Then, data was processed and grouped into viable training, validation, and testing splits. This was done using SciKitLearn's StratifiedGroupKFold function. This function creates subsets of data, known as 'folds', and ensures that 1. all of the photos of 1 lesion are in the same fold and 2. that the distribution of classes in each fold roughly matches the original distribution of the classes in the dataset. This ensures that near-duplicate images of the same photo never appear in both training and testing data, which would inflate accuracy. This function was used twice, along with other functions, to create 3 splits of data; training data, validation data, testing data. 
+First, the images were downloaded from Kaggle directly [1] into the project folder using code in download_files.py. Then, data was processed and grouped into viable training, validation, and testing splits. This was done using scikit-learn's StratifiedGroupKFold function. This function creates subsets of data, known as 'folds', and ensures that 1. all of the photos of 1 lesion are in the same fold and 2. that the distribution of classes in each fold roughly matches the original distribution of the classes in the dataset. This ensures that prevents photos of the same lesion from appearing in both training and testing data. This function was used twice, along with other functions, to create 3 splits of data; training data, validation data, testing data. 
 
-Next, the model was created. The model is based off of EfficientNetV2B1 from TensorFlow, pretrained on images from ImageNet. Inputs were taken in as 240 pixels by 240 pixels, with 3 color channels. After EfficientNetV2B1, GlobalAveragePooling and DropOut by 20% were added. The EfficientNet layers were frozen for the first round of training. Next, a dense head with 7 neurons and a softmax activation was added. It is this head that gets trained. The other layers were frozen to stop the training from affecting both the untrained dense head and the ImageNet training done on EfficientNetV2B1. 
+Next, the model was created. The model is based off of EfficientNetV2B1 from TensorFlow, pretrained on images from ImageNet. Inputs were taken in as 240 pixels by 240 pixels, with 3 color channels. After EfficientNetV2B1, GlobalAveragePooling and DropOut by 20% were added. The EfficientNet layers were frozen for the first round of training. Next, a dense head with 7 neurons and a softmax activation was added. It is this head that gets trained. The EfficientNet layers were frozen so that the large early gradients from the randomly initialized head could not damage the pretrained ImageNet features.
 
 Finally, the model was trained on the images, with an Adam optimizer at a learning rate of 10^-3, and sparse categorical crossentropy as the loss because the classes are encoded as integers. Furthermore, early stopping with a patience of 3 and model checkpoints were enabled. 
 
-After training, evaluate.py was used on the model (best.keras) using the test data. As implied, this model has no finetuning nor data augmentation involved. Below are the classification report and the confusion matrices (regular and normalized)
+After training, evaluate.py was used on the model (best.keras) using the test data (2004 images). As implied, this model has no finetuning nor data augmentation involved. Below are the classification report and the confusion matrices (regular and normalized)
 
 
 |              |   precision |   recall |   f1-score |   support |
 |:-------------|------------:|---------:|-----------:|----------:|
-| akiec        |        0.25 |     0.57 |       0.35 |        44 |
-| bcc          |        0.43 |     0.52 |       0.47 |        69 |
-| bkl          |        0.57 |     0.55 |       0.56 |       146 |
-| df           |        0.2  |     0.73 |       0.31 |        15 |
-| mel          |        0.39 |     0.6  |       0.47 |       148 |
-| nv           |        0.96 |     0.74 |       0.84 |       894 |
-| vasc         |        0.49 |     0.89 |       0.63 |        19 |
-| accuracy     |        0.69 |     0.69 |       0.69 |         0 |
-| macro avg    |        0.47 |     0.66 |       0.52 |      1335 |
-| weighted avg |        0.79 |     0.69 |       0.72 |      1335 |
+| akiec        |        0.33 |     0.77 |       0.46 |        66 |
+| bcc          |        0.41 |     0.47 |       0.44 |       103 |
+| bkl          |        0.58 |     0.52 |       0.55 |       220 |
+| df           |        0.16 |     0.65 |       0.25 |        23 |
+| mel          |        0.39 |     0.52 |       0.45 |       222 |
+| nv           |        0.96 |     0.78 |       0.86 |      1341 |
+| vasc         |        0.38 |     0.69 |       0.49 |        29 |
+| accuracy     |        0.7  |     0.7  |       0.7  |      2004 |
+| macro avg    |        0.46 |     0.63 |       0.5  |      2004 |
+| weighted avg |        0.79 |     0.7  |       0.73 |      2004 |
 
 
-<img width="815" height="680" alt="image" src="https://github.com/user-attachments/assets/dce8df9e-fd71-4d91-8b54-85a24eb6b454" />
-<img width="796" height="680" alt="image" src="https://github.com/user-attachments/assets/e763f00a-f208-4d62-8559-df471e6d38c1" />
+<img width="815" height="680" alt="image" src="https://github.com/user-attachments/assets/56bb15ab-28d4-421f-908e-947135b75ffc" />
+<img width="796" height="680" alt="image" src="https://github.com/user-attachments/assets/c7f2cfd1-abc3-48ac-9f02-37c3cfcc3ea2" />
 
 
-The accuracy row in the above table is not informative on its own. This is because guessing nv for every single image already gives an accuracy of 0.67 (894/1335). 
+The accuracy row in the above table is not informative on its own. This is because guessing nv for every single image already gives an accuracy of 0.67 (1341/2004). 
 The most relevant numbers are:
 
-- Macro avg of the F1 score (0.52): This number indicates that the model is okay on overall reliability. It is much better than random guessing (0.14), but low scores on df (0.31) and akiec (0.35) bring the model's reliability down.
-- Macro-recall (0.66): This number indicates that the model, on average, correctly identifies two thirds of images in each class.
-- Macro-precision (0.47): This indicates that the model's flags are correct less than half the time. This shows that the model is over-confident.
-- mel recall (0.60): This indicates that the model misses 4 out of every 10 images of mel. Not save for diagnosis, as melanoma is deadly. [7]
-- mel precision (0.39): This indicates that the model incorrectly identifies an image as mel 6 out of 10 times. Most of these may have come from identifying nv as mel, as the 2 look similar. This similarity will be explored using GradCAM later.
-- vasc recall (0.89): This indicates that the model correctly identifies images as vasc almost 9 out of 10 times, even with such few images for training (19). This may be because vasc looks very distinct compared to the other lesions 
+- Macro avg of the F1 score (0.50): This number indicates that the model is okay on overall reliability. It is much better than random guessing (0.14), but low scores on df (0.25) and bcc (0.44) bring the model's reliability down.
+- Macro-recall (0.63): This number indicates that the model, on average, correctly identifies 63% of images in each class.
+- Macro-precision (0.46): This indicates that the model's flags are correct less than half the time. This shows that the model over-flags: it raises many false alarms.
+- mel recall (0.52): This indicates that the model misses 5 out of every 10 images of mel [6]. Not safe for diagnosis, as melanoma is deadly. [7]
+- mel precision (0.39): This indicates that about 6 of every 10 images the model flags as mel are not mel [6]. Most of these come from identifying nv as mel, as the 2 look similar. This similarity will be explored using GradCAM later.
+- vasc recall (0.69): This indicates that the model correctly identifies images as vasc almost 7 out of 10 times, even with such few images for testing (29). This may be because vasc looks very distinct compared to the other lesions.
 
 
-Overall, the model, with basic training, is able to correctly identify classes when there are many images of those classes (e.g. nv), but drops significantly in accuracy when the number of images for a particular class is low (e.g. df). 
+Overall, the model, with basic training, has uneven performance. It is most reliable on nv, the most common class (F1 0.86), and weakest where lesions look alike or the sample is small, e.g. mel/nv confusion and df (F1 0.25, from only 23 test images).
 
 **Data augmentation, fine-tuning, and final model selection**
 
-Based on the classification report and confusion matrices, the model could use some improvement. 
+Based on the classification report and confusion matrices, the model could use some improvement. The baseline had a macro-F1 of 0.50 and had difficulty distinguishing between mel and nv. 
+
+First, finetuning was implemented. The last 30 layers of EfficientNetV2B1 were unfrozen, and the learning rate dropped to 10^-5. The number of epochs was up to 15, patience for early stopping increased to 5 epochs, and class weights were kept the same. After fine-tuning once, and then raising the learning rate to 10^-4, the Macro F1 increased in the second finetuning. Macro-F1 went from 0.5 in the baseline to 0.52 in the first finetuned model, to 0.56 in the second finetuned model. Since the second finetuned model is ultimately the chosen model, its classification report and confusion matrices will be shown later. Below is the classification report for the first fine-tuned model. 
+
+|              |   precision |   recall |   f1-score |   support |
+|:-------------|------------:|---------:|-----------:|----------:|
+| akiec        |        0.4  |     0.64 |       0.49 |        66 |
+| bcc          |        0.39 |     0.58 |       0.47 |       103 |
+| bkl          |        0.51 |     0.57 |       0.54 |       220 |
+| df           |        0.27 |     0.57 |       0.36 |        23 |
+| mel          |        0.39 |     0.55 |       0.46 |       222 |
+| nv           |        0.96 |     0.78 |       0.86 |      1341 |
+| vasc         |        0.38 |     0.62 |       0.47 |        29 |
+| accuracy     |        0.71 |     0.71 |       0.71 |      2004 |
+| macro avg    |        0.47 |     0.61 |       0.52 |      2004 |
+| weighted avg |        0.78 |     0.71 |       0.74 |      2004 |
+
+As stated before, the Macro-F1 went from 0.50 in the baseline model to 0.52 in the first finetuned model. This is a small improvement. Furthermore, while df precision increased from 0.16 to 0.27, akiec recall dropped from 0.77 to 0.64. Again, the analysis on the second finetuned model will be shown later as it is the best out of all of the other models created in this study.  
+
+(start data augmentation analysis)
