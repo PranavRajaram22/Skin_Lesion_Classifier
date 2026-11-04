@@ -7,12 +7,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 #reloading model from best.keras
-model = tf.keras.models.load_model('best.keras')
+model = tf.keras.models.load_model('best_ft.keras')
 
 #predict probabilities
-probs = model.predict(test_ds)
+probs = model.predict(val_ds)
 pred = probs.argmax(axis=1)
-true = test['label'].to_numpy()
+true = val['label'].to_numpy()
 
 cf = classification_report(true, pred, target_names=classes, output_dict=True)
 df = pd.DataFrame(cf).T.round(2)
